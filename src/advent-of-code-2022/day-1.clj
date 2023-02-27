@@ -32,3 +32,7 @@
 ; 68292
 
 
+; top 3
+(reduce + (take 3 (sort > (to-sums))))
+
+
