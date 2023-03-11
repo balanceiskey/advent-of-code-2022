@@ -9,10 +9,13 @@
 (defn lazy-contains? [col key]
   (some #{key} col))
 
-(defn find-match
-  "Find character from first list that exists in second"
+(defn find-matches
+  "Find characters that exist in the first list that also exist in the second"
   [needles haystack]
-    (first (filter #(lazy-contains? haystack %) needles)))
+    (filter #(lazy-contains? haystack %) needles))
+
+(defn find-first-match [needles haystack]
+  (first (find-matches needles haystack)))
 
 (defn char->point [char]
   (let [code (int char)]
@@ -24,16 +27,15 @@
 
 ; part 1 eval
 (def puzzle-input (slurp "./src/puzzle-inputs/day-3.txt"))
-(apply + (map #(char->point (apply find-match (split-row %))) (get-rows puzzle-input)))
+(apply + (map #(char->point (apply find-first-match (split-row %))) (get-rows puzzle-input)))
 
+; part 2, function composition ftw
+(defn find-match-2 [coll-1 coll-2 coll-3]
+  (let [first-matches (find-matches coll-1 coll-2)]
+    (find-first-match first-matches coll-3)))
 
-; * elves (e) are divided into groups (g) of three
-; * each elf (e) carries a badge (b) that identifies their group (g)
-; * within each group (g) the badge (b) is the only item type (t) carried by all three elves
-  ; * if a group's badge (b) is item type \B then all three elves will have item type \B somewhere in their rucksack
-  ; * at most two of the elves will be carrying any other item type (t)
-;
-
+; part 2 eval
+(apply + (map #(char->point (apply find-match-2 %)) (partition 3 (get-rows puzzle-input))))
 
 
 
