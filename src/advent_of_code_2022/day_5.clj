@@ -29,6 +29,16 @@
         (assoc from-index new-from)
         (assoc to-index new-to))))
 
+(defn apply-action-2 [stacks action]
+  (let [from-index (- (:from action) 1)
+        to-index (- (:to action) 1)
+        taken (take (:num action) (get stacks from-index))
+        new-to (vec (concat taken (get stacks to-index)))
+        new-from (subvec (get stacks from-index) (:num action))]
+    (-> stacks
+        (assoc from-index new-from)
+        (assoc to-index new-to))))
+
 (defn get-rows [contents]
   (map
     row->action
@@ -45,6 +55,8 @@
 (reduce apply-action stack-ex (get-rows puzzle-ex))
 (reduce apply-action stack (get-rows puzzle-input))
 
-
+; day 5 part 2
+(reduce apply-action-2 stack-ex (get-rows puzzle-ex))
+(reduce apply-action-2 stack (get-rows puzzle-input))
 
 
