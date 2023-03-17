@@ -1,6 +1,7 @@
 (ns advent-of-code-2022.day-7
   (:require [clojure.string :as str]
-            [clojure.walk :as walk]))
+            ; [clojure.walk :as walk]
+            [clojure.pprint :as pprint]))
 
 (def puzzle-ex (str/split (slurp "./src/puzzle-inputs/day-7-ex.txt") #"\n"))
 
@@ -41,8 +42,12 @@
     (assoc world :cwd (pop (:cwd world)))
     (assoc world :cwd (conj (:cwd world) (keyword dirname)))))
 
+; (defn file-handler [size filename world]
+;   (assoc-in world (conj (:cwd world) (keyword (clean-filename filename))) {:size size :type :file :name filename }))
+
 (defn file-handler [size filename world]
-  (assoc-in world (conj (:cwd world) (keyword (clean-filename filename))) {:size size :type :file :name filename }))
+  (let [new-files (conj (:files world) {:size size :name filename :parents (:cwd world)})]
+    (assoc world :files new-files)))
 
 ; dirs tells us about things that are going to extend the tree, files tell us about where sizes belong
 (defn dir-handler [path world] world)
@@ -61,64 +66,28 @@
     (handler world)))
 
 
-(def state {:cwd [] })
+(def world {:cwd [] :files []})
+(def result-ex (reduce handle world (map row->data puzzle-ex)))
+(pprint/pprint result-ex)
 
-(clojure.pprint/pprint map-ex)
-(clojure.pprint/pprint (reduce handle state (map row->data puzzle-ex)))
+(defn get-directories [files]
+  (set (flatten (map #(:parents %) files))))
 
-; okay so we've got this neat data structure:
+(get-directories (:files result-ex))
 
-(def ex-structure (reduce handle state (map row->data puzzle-ex)))
+(defn update-vals [map vals f]
+  (reduce #(update-in % [%2] f) map vals))
 
-; if we wanted to keep things basic, and just wanted to see if we could get the
-; the size of a specific directory, like the root `:/`, we'd need to first discover all files (things with :type file)
-; and return their sizes.
-{:cwd [:/ :d],
- :/
- {:b.txt {:size 14848514, :type :file, :name "b.txt"},
-  :c.dat {:size 8504156, :type :file, :name "c.dat"},
-  :a
-  {:f {:size 29116, :type :file, :name "f"},
-   :g {:size 2557, :type :file, :name "g"},
-   :h.lst {:size 62596, :type :file, :name "h.lst"},
-   :e {:i {:size 584, :type :file, :name "i"}}},
-  :d
-  {:j {:size 4060174, :type :file, :name "j"},
-   :d.log {:size 8033020, :type :file, :name "d.log"},
-   :d.ext {:size 5626152, :type :file, :name "d.ext"},
-   :k {:size 7214296, :type :file, :name "k"}}}}
+(defn reduce-size [sizes file]
+  (update-vals sizes (:parents file) (partial + (:size file))))
 
-; (get-in ex-structure [:/ :/b.txt])
+(defn process-files [files]
+  (let [sizes (init-size-map (get-directories files))]
+    (reduce reduce-size sizes files)))
 
-(keys ex-structure)
+(defn under-100k? [[_ v]] (< v 100000))
 
-; is it a file?
-
-(contains? (:/ ex-structure) :type) ; nope
-(contains? (get-in ex-structure [:/ :b-txt]) :type) ; yep
-
-; okay, how do you walk a nested map?
-
-(walk/prewalk-demo ex-structure)
-
-(walk/prewalk (fn [x] (if integer? x 0)) ex-structure)
-
-; (walk/postwalk integer? ex-structure)
-; (walk/postwalk #(if (integer? %) (%) nil) ex-structure)
-
-; (walk/postwalk identity ex-structure)
-
-(def my-map {:a 1 :b {:c "hello" :d {:e 2.5}}})
-
-; (filter number? (walk/postwalk identity my-map))
-
-
-
-
-
-
-
-
-
+; example woof tough
+(apply + (vals (filter under-100k? (process-files (:files result-ex)))))
 
 
