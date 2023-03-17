@@ -1,4 +1,4 @@
-(ns advent-of-code-2022.day-5
+(ns advent-of-code-2022.day-6
   (:require [clojure.string :as str]))
 
 (def marker-size 14)
