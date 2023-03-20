@@ -70,12 +70,27 @@
 
 (defn under-100k? [[_ v]] (<= v 100000))
 
+(defn get-tree [rows]
+  (let [init-state {:cwd [] :files []}]
+    (reduce handle init-state (map row->data rows))))
+
 (defn sum-deleteable
   "Takes in a list of command rows and provides the sum of deletable dirs"
   [rows]
-  (let [init-state {:cwd [] :files []}
-        row-data (reduce handle init-state (map row->data rows))]
-    (apply + (vals (filter under-100k? (process-files (:files row-data)))))))
+    (apply + (vals (filter
+                     under-100k?
+                     (process-files (:files (get-tree rows)))))))
+
+
+(defn get-dir-usage [rows]
+  (process-files (:files (get-tree rows))))
+
+(defn find-smallest-dir [rows]
+  (let [dir-usage (get-dir-usage rows)
+        root-usage (get dir-usage "/")
+        needed (- 30000000 (- 70000000 root-usage))
+        sorted-dirs (sort-by val dir-usage)]
+    (first (filter #(> (val %) needed) sorted-dirs))))
 
 
 ; eval party
@@ -86,5 +101,7 @@
 (sum-deleteable puzzle-ex)
 (sum-deleteable puzzle-alt)
 (sum-deleteable puzzle-pt1)
+
+(find-smallest-dir puzzle-ex)
 
 
