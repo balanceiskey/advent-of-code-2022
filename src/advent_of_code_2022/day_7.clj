@@ -3,7 +3,6 @@
             [clojure.pprint :as pprint]))
 
 ; Function Buddies.
-
 (defn parse-cmd [row]
   (let [parts (str/split row #" ")]
     {:cmd (if (= "cd" (get parts 1)) :cd :ls)
@@ -23,16 +22,10 @@
     \d (parse-dir row)
     (parse-file row)))
 
-
-(defn clean-filename
-  "Makes filename keyword safe"
-  [name]
-  (str/replace name "." "-"))
-
 (defn cd-handler [dirname world]
   (if (= dirname "..")
     (assoc world :cwd (pop (:cwd world)))
-    (assoc world :cwd (conj (:cwd world) (keyword dirname)))))
+    (assoc world :cwd (conj (:cwd world) dirname))))
 
 (defn file-handler [size filename world]
   (let [new-files (conj (:files world) {:size size :name filename :parents (:cwd world)})]
@@ -53,14 +46,20 @@
         handler (apply partial (flatten [(cmd handlers) args]))]
     (handler world)))
 
+(defn get-leaves [v]
+  (let [n (count v)]
+    (for [i (range 1 (inc n))]
+      (str/join ":" (subvec v 0 i)))))
+
 (defn get-directories [files]
-  (set (flatten (map #(:parents %) files))))
+  (set (flatten (map #(get-leaves (:parents %)) files))))
 
 (defn update-vals [map vals f]
   (reduce #(update-in % [%2] f) map vals))
 
 (defn reduce-size [sizes file]
-  (update-vals sizes (:parents file) (partial + (:size file))))
+  (let [update-keys (get-leaves (:parents file))]
+    (update-vals sizes update-keys (partial + (:size file)))))
 
 (defn init-size-map [dirs]
   (zipmap dirs (vec (repeat (count dirs) 0))))
@@ -69,7 +68,7 @@
   (let [sizes (init-size-map (get-directories files))]
     (reduce reduce-size sizes files)))
 
-(defn under-100k? [[_ v]] (< v 100000))
+(defn under-100k? [[_ v]] (<= v 100000))
 
 (defn sum-deleteable
   "Takes in a list of command rows and provides the sum of deletable dirs"
@@ -81,9 +80,11 @@
 
 ; eval party
 (def puzzle-ex (str/split (slurp "./src/puzzle-inputs/day-7-ex.txt") #"\n"))
+(def puzzle-alt (str/split (slurp "./src/puzzle-inputs/day-7-alt.txt") #"\n"))
 (def puzzle-pt1 (str/split (slurp "./src/puzzle-inputs/day-7.txt") #"\n"))
 
 (sum-deleteable puzzle-ex)
+(sum-deleteable puzzle-alt)
 (sum-deleteable puzzle-pt1)
 
 
