@@ -3,13 +3,11 @@
             [clojure.string :as str]
             [clojure.pprint :as pprint]))
 
+(def puzzle-alt (utils/get-rows "day-8-alt.txt"))
 (def puzzle-ex (utils/get-rows "day-8-ex.txt"))
 (def puzzle-real (utils/get-rows "day-8.txt"))
 
 (def puzzle puzzle-real)
-; (def puzzle puzzle-ex)
-
-(pprint/pprint puzzle-ex)
 
 (defn string->int [s]
   (into [] (map #(Integer/parseInt %) (str/split s #""))))
@@ -20,8 +18,6 @@
 (def tree-map (build-map puzzle))
 (def num-rows (count tree-map))
 (def num-columns (count (first tree-map)))
-
-(pprint/pprint tree-map)
 
 (defn num-edge-trees
   "Accepts a tree map and returns the number trees that make up its edge."
@@ -55,12 +51,8 @@
 
 (defn visible? [[row column] tmap take-fn]
   (let [value (get-in-tmap tmap [row column])
-        taken (take-fn [row column] tmap)
-        sorted (reverse (sort taken))]
-    ; (println value ":" taken)
-    (and
-      (every? #(< % value) taken)
-      (= taken sorted))))
+        taken (take-fn [row column] tmap)]
+    (every? #(< % value) taken)))
 
 (defn some-visible? [coords tmap]
   (some true? [(visible? coords tmap take-top)
@@ -73,9 +65,7 @@
         col (range num-columns)]
     [row col]))
 
-(println "rows" num-rows)
-(println "columns" num-columns)
 (count (filter true? (map #(some-visible? % tree-map) (gen-coords num-rows num-columns))))
-; 652, answer too low
+
 
 
