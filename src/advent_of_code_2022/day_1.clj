@@ -15,4 +15,5 @@
 (println maximum)
 
 (def top-three (reduce + (take 3 (sort > (to-sums)))))
+
 (println top-three)
